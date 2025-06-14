@@ -1,2 +1,2 @@
-import treamlit as st  
+import streamlit as st  
 st.title('bo may la nha vua')
