@@ -1,33 +1,29 @@
 import streamlit as st
-import qrcode
-from io import BytesIO
+import random
+import time
 
-# Nhập link
-fb_link = st.text_input("🔗 Nhập link bài viết Facebook:", placeholder="https://facebook.com/abc...")
+st.set_page_config(page_title="🎯 Vòng Quay May Mắn", layout="centered")
 
-if st.button("🎯 Tạo QR Code") and fb_link:
-    # Tạo QR Code
-    qr = qrcode.QRCode(
-        version=1,
-        box_size=10,
-        border=4
-    )
-    qr.add_data(fb_link)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white").convert('RGB')  # Đảm bảo ảnh RGB
+st.title("🎯 VÒNG QUAY MAY MẮN")
+st.write("Nhập danh sách người chơi hoặc phần thưởng để quay ngẫu nhiên.")
 
-    # Hiển thị ảnh
-    st.image(img, caption="📷 Mã QR để chia sẻ", use_column_width=False)
+# Nhập danh sách
+items = st.text_area("📝 Nhập mỗi dòng là một người/chọn:", placeholder="Phần thưởng 1\nPhần thưởng 2\nPhần thưởng 3").split('\n')
+items = [item.strip() for item in items if item.strip() != '']
 
-    # ✅ Chuyển ảnh thành bytes để tải về
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    byte_im = buf.getvalue()
+if len(items) < 2:
+    st.warning("🔔 Vui lòng nhập ít nhất 2 mục để quay.")
+    st.stop()
 
-    # Nút tải ảnh
-    st.download_button(
-        label="⬇️ Tải mã QR",
-        data=byte_im,
-        file_name="fb_qrcode.png",
-        mime="image/png"
-    )
+# Nút quay
+if st.button("🎉 QUAY NGAY"):
+    with st.spinner("🔄 Đang quay..."):
+        spin_time = 3  # Giả lập thời gian quay
+        for i in range(spin_time * 10):
+            chosen = random.choice(items)
+            st.write(f"👉 {chosen}")
+            time.sleep(0.1)
+            st.experimental_rerun()  # Tái chạy để làm hiệu ứng quay
+
+    winner = random.choice(items)
+    st.success(f"🎉 KẾT QUẢ: **{winner}** 🎊")
