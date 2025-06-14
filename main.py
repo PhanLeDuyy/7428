@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-import time
 
 st.set_page_config(page_title="Tài Xỉu Game", layout="wide")
 
@@ -89,10 +88,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 4rem;
+    font-size: 2.2rem;
     font-weight: 900;
     color: white;
     user-select: none;
+    flex-wrap: wrap;
+    text-align: center;
+    padding: 10px;
 }
 
 /* Thanh trạng thái */
@@ -125,20 +127,23 @@ body {
     background-color: #ff6e7f;
     box-shadow: 0 0 6px #ff6e7f;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# Biến trạng thái cược
+# Khởi tạo biến trong session_state
 if 'bet_tai' not in st.session_state:
     st.session_state.bet_tai = 0
 if 'bet_xiu' not in st.session_state:
     st.session_state.bet_xiu = 0
 if 'history' not in st.session_state:
     st.session_state.history = []
+if 'last_dice' not in st.session_state:
+    st.session_state.last_dice = None
+if 'last_result' not in st.session_state:
+    st.session_state.last_result = None
 
-# Layout chính: 3 cột
-col1, col2, col3 = st.columns([3,1,3])
+# Layout 3 cột
+col1, col2, col3 = st.columns([3, 1, 3])
 
 with col1:
     st.markdown('<div class="card tai">', unsafe_allow_html=True)
@@ -149,10 +154,15 @@ with col1:
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    # Vòng tròn trung tâm hiển thị số ngẫu nhiên 4-17 (giống điểm tài xỉu)
     center_value = st.empty()
-    number = random.randint(4,17)
-    center_value.markdown(f'<div class="center-circle">{number}</div>', unsafe_allow_html=True)
+    # Hiển thị xúc xắc và tổng nếu đã chơi
+    dice = st.session_state.last_dice
+    if dice:
+        total = sum(dice)
+        dice_str = " + ".join(str(d) for d in dice)
+        center_value.markdown(f'<div class="center-circle">{dice_str} = {total}</div>', unsafe_allow_html=True)
+    else:
+        center_value.markdown(f'<div class="center-circle">...</div>', unsafe_allow_html=True)
 
 with col3:
     st.markdown('<div class="card xiu">', unsafe_allow_html=True)
@@ -164,18 +174,24 @@ with col3:
 
 # Thanh trạng thái lịch sử tài/xỉu
 st.markdown('<div class="status-bar">', unsafe_allow_html=True)
-
-for i, result in enumerate(st.session_state.history[-20:]):
+for result in st.session_state.history[-20:]:
     if result == "TÀI":
         st.markdown('<div class="status-dot status-tai"></div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="status-dot status-xiu"></div>', unsafe_allow_html=True)
-
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Nút chơi (simulate tung xúc xắc ra kết quả)
+# Nút chơi tung xúc xắc
 if st.button("Chơi ngay!"):
-    # Giả lập kết quả ngẫu nhiên
-    ket_qua = "TÀI" if number >= 11 else "XỈU"
+    dice = [random.randint(1,6) for _ in range(3)]
+    total = sum(dice)
+    ket_qua = "TÀI" if total >= 11 else "XỈU"
+    # Lưu trạng thái
+    st.session_state.last_dice = dice
+    st.session_state.last_result = ket_qua
     st.session_state.history.append(ket_qua)
     st.experimental_rerun()
+
+# Hiển thị kết quả thắng thua
+if st.session_state.last_result:
+    st.markdown(f"### Kết quả: **{st.session_state.last_result}** thắng!")
