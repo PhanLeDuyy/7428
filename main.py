@@ -1,2 +1,2 @@
 import treamlit as st  
-st.tital('bo may la nha vua')
+st.title('bo may la nha vua')
