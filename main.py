@@ -1,154 +1,70 @@
 import streamlit as st
-import random
+from datetime import datetime
 
-st.set_page_config(page_title="Tài Xỉu Game", layout="wide")
+st.set_page_config(page_title="Ủng hộ trẻ em châu Phi", layout="centered")
 
-# --- KHỞI TẠO SESSION_STATE ---
-if 'bet_tai' not in st.session_state:
-    st.session_state.bet_tai = 0
-if 'bet_xiu' not in st.session_state:
-    st.session_state.bet_xiu = 0
-if 'history' not in st.session_state:
-    st.session_state.history = []
-if 'last_dice' not in st.session_state:
-    st.session_state.last_dice = None
-if 'last_result' not in st.session_state:
-    st.session_state.last_result = None
-if 'trigger_rerun' not in st.session_state:
-    st.session_state.trigger_rerun = False
-
-# --- CSS GIAO DIỆN ---
+# --- CSS đơn giản cho phong cách cảm động ---
 st.markdown("""
-<style>
-body {
-    background-color: #121212;
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.card {
-    width: 300px;
-    height: 220px;
-    border-radius: 15px;
-    padding: 20px;
-    position: relative;
-    box-shadow: 0 0 15px rgba(0,0,0,0.6);
-}
-.tai {
-    background: linear-gradient(135deg, #1de9b6, #00bfa5);
-    box-shadow: 0 0 20px #00bfa5;
-}
-.xiu {
-    background: linear-gradient(135deg, #ff6e7f, #bfe9ff);
-    box-shadow: 0 0 20px #ff6e7f;
-}
-.title {
-    font-size: 4rem;
-    font-weight: 900;
-    user-select: none;
-}
-.bet-amount {
-    margin-top: 10px;
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: gold;
-}
-.center-circle {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #222222 60%, #ffb300 100%);
-    box-shadow: 0 0 30px #ffb300;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2rem;
-    font-weight: 900;
-    color: white;
-    user-select: none;
-    flex-wrap: wrap;
-    text-align: center;
-    padding: 10px;
-}
-.status-bar {
-    margin-top: 40px;
-    width: 90%;
-    height: 20px;
-    background: #333;
-    border-radius: 10px;
-    display: flex;
-    gap: 5px;
-    padding: 5px;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-}
-.status-dot {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-}
-.status-tai {
-    background-color: #00bfa5;
-    box-shadow: 0 0 6px #00bfa5;
-}
-.status-xiu {
-    background-color: #ff6e7f;
-    box-shadow: 0 0 6px #ff6e7f;
-}
-</style>
+    <style>
+    .big-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #ff6347;
+        text-align: center;
+    }
+    .subtext {
+        font-size: 1.2rem;
+        text-align: center;
+        margin-top: -10px;
+        color: #555;
+    }
+    .thank-you {
+        font-size: 1.1rem;
+        color: green;
+        margin-top: 10px;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# --- GIAO DIỆN 3 CỘT ---
-col1, col2, col3 = st.columns([3, 1, 3])
+# --- Tiêu đề chính ---
+st.markdown('<div class="big-title">Ủng hộ Trẻ Em Châu Phi</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtext">Mỗi đóng góp của bạn là một tia hy vọng cho các em nhỏ đang đói khát và thiếu thốn</div>', unsafe_allow_html=True)
 
-with col1:
-    st.markdown('<div class="card tai">', unsafe_allow_html=True)
-    st.markdown('<div class="title">TÀI</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="bet-amount">Cược: {st.session_state.bet_tai:,}đ</div>', unsafe_allow_html=True)
-    if st.button("Cược TÀI"):
-        st.session_state.bet_tai += 1000
-    st.markdown('</div>', unsafe_allow_html=True)
+# --- Hình ảnh minh họa ---
+st.image("https://i.imgur.com/5oCz4KC.jpg", use_column_width=True, caption="Nguồn: UNICEF")
 
-with col2:
-    center = st.empty()
-    dice = st.session_state.last_dice
-    if dice:
-        total = sum(dice)
-        dice_str = " + ".join(str(d) for d in dice)
-        center.markdown(f'<div class="center-circle">{dice_str} = {total}</div>', unsafe_allow_html=True)
-    else:
-        center.markdown(f'<div class="center-circle">...</div>', unsafe_allow_html=True)
+# --- Form ủng hộ ---
+st.header("🤝 Gửi tấm lòng của bạn")
 
-with col3:
-    st.markdown('<div class="card xiu">', unsafe_allow_html=True)
-    st.markdown('<div class="title">XỈU</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="bet-amount">Cược: {st.session_state.bet_xiu:,}đ</div>', unsafe_allow_html=True)
-    if st.button("Cược XỈU"):
-        st.session_state.bet_xiu += 1000
-    st.markdown('</div>', unsafe_allow_html=True)
+with st.form("donate_form"):
+    name = st.text_input("Tên của bạn", max_chars=30)
+    amount = st.selectbox("Số tiền muốn ủng hộ", [50000, 100000, 200000, 500000, 1000000], format_func=lambda x: f"{x:,} VNĐ")
+    message = st.text_area("Lời nhắn gửi đến các em nhỏ", max_chars=200)
+    submit = st.form_submit_button("Gửi ủng hộ")
 
-# --- LỊCH SỬ TÀI XỈU ---
-st.markdown('<div class="status-bar">', unsafe_allow_html=True)
-for result in st.session_state.history[-20:]:
-    color_class = "status-tai" if result == "TÀI" else "status-xiu"
-    st.markdown(f'<div class="status-dot {color_class}"></div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+    if submit and name:
+        now = datetime.now().strftime("%d/%m/%Y %H:%M")
+        # Lưu tạm vào session_state
+        if 'donors' not in st.session_state:
+            st.session_state.donors = []
+        st.session_state.donors.append({
+            "name": name,
+            "amount": amount,
+            "message": message,
+            "time": now
+        })
+        st.success("❤️ Cảm ơn bạn đã ủng hộ!")
 
-# --- NÚT CHƠI ---
-if st.button("Chơi ngay!"):
-    dice = [random.randint(1, 6) for _ in range(3)]
-    total = sum(dice)
-    ket_qua = "TÀI" if total >= 11 else "XỈU"
-    st.session_state.last_dice = dice
-    st.session_state.last_result = ket_qua
-    st.session_state.history.append(ket_qua)
-    st.session_state.trigger_rerun = True  # bật cờ rerun
+# --- Hiển thị danh sách người đã ủng hộ ---
+if 'donors' in st.session_state and st.session_state.donors:
+    st.header("📜 Danh sách ủng hộ")
+    for donor in reversed(st.session_state.donors[-10:]):  # Hiện 10 người gần nhất
+        st.markdown(f"""
+        **🧍 {donor['name']}** - ủng hộ **{donor['amount']:,} VNĐ** *(vào {donor['time']})*  
+        > _"{donor['message']}"_
+        ---
+        """)
 
-# --- HIỂN THỊ KẾT QUẢ ---
-if st.session_state.last_result:
-    st.markdown(f"### ✅ Kết quả: **{st.session_state.last_result}** thắng!")
-
-# --- XỬ LÝ RERUN ---
-if st.session_state.trigger_rerun:
-    st.session_state.trigger_rerun = False
-    st.experimental_rerun()
+# --- Footer ---
+st.markdown("---")
+st.markdown("*Dự án thiện nguyện phi lợi nhuận. Mọi số tiền thu được sẽ gửi trực tiếp qua tổ chức từ thiện quốc tế.*")
