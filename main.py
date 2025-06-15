@@ -1,19 +1,59 @@
 import streamlit as st
-from streamlit.components.v1 import html
+import streamlit.components.v1 as components
+import json
 
-st.set_page_config(page_title="🎯 Vòng quay may mắn", layout="centered")
-st.title("🎯 Vòng Quay May Mắn")
+st.set_page_config(page_title="🎯 Vòng quay may mắn có xác suất", layout="centered")
+st.title("🎯 Vòng quay may mắn có xác suất")
 
-# HTML + CSS + JS code vòng quay (đã chỉnh sửa nhẹ cho phù hợp trong iframe)
-wheel_code = """
+st.markdown("""
+Nhập từng phần thưởng mỗi dòng, và tỷ lệ phần trăm tương ứng cách nhau dấu phẩy.<br>
+Ví dụ phần thưởng:<br>
+<pre>
+Thưởng A
+Thưởng B
+Thưởng C
+</pre>
+Tỷ lệ phần trăm:<br>
+<pre>
+50,30,20
+</pre>
+Tổng tỷ lệ nên bằng 100.
+""", unsafe_allow_html=True)
+
+# Nhập phần thưởng
+prizes_text = st.text_area("Phần thưởng (mỗi dòng 1 phần thưởng)", "A\nB\nC\nD")
+weights_text = st.text_input("Tỷ lệ phần trăm tương ứng (cách nhau dấu phẩy)", "50,20,20,10")
+
+prizes = [p.strip() for p in prizes_text.strip().split("\n") if p.strip()]
+weights_strs = [w.strip() for w in weights_text.strip().split(",") if w.strip()]
+
+if len(prizes) != len(weights_strs):
+    st.error("❌ Số phần thưởng và số tỷ lệ phải bằng nhau!")
+    st.stop()
+
+try:
+    weights = [float(w) for w in weights_strs]
+except:
+    st.error("❌ Tỷ lệ phần trăm phải là các số hợp lệ!")
+    st.stop()
+
+total = sum(weights)
+if total <= 0:
+    st.error("❌ Tổng tỷ lệ phải lớn hơn 0!")
+    st.stop()
+
+# Chuẩn hóa tỷ lệ thành phần trăm
+weights = [w / total * 100 for w in weights]
+
+wheel_code = f"""
 <style>
-  body {
+  body {{
     font-family: sans-serif;
     text-align: center;
     background: #f3f3f3;
     margin: 0; padding: 0;
-  }
-  #wheel {
+  }}
+  #wheel {{
     margin: 40px auto;
     width: 400px;
     height: 400px;
@@ -23,8 +63,8 @@ wheel_code = """
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0,0,0,0.2);
     transform: rotate(0deg);
-  }
-  .segment {
+  }}
+  .segment {{
     width: 50%;
     height: 200px;
     position: absolute;
@@ -38,14 +78,14 @@ wheel_code = """
     justify-content: center;
     font-size: 18px;
     font-weight: bold;
-  }
-  #spin {
+  }}
+  #spin {{
     margin-top: 20px;
     padding: 10px 20px;
     font-size: 20px;
     cursor: pointer;
-  }
-  #pointer {
+  }}
+  #pointer {{
     width: 0;
     height: 0;
     border-left: 20px solid transparent;
@@ -54,7 +94,7 @@ wheel_code = """
     position: absolute;
     top: -30px;
     left: calc(50% - 20px);
-  }
+  }}
 </style>
 
 <h1>🎯 Vòng Quay May Mắn</h1>
@@ -64,13 +104,15 @@ wheel_code = """
 <button id="spin">QUAY</button>
 
 <script>
-  const items = ["A", "B", "C", "D"];
-  const weights = [50, 20, 20, 10];
-  const colors = ["#f44336", "#4caf50", "#2196f3", "#ff9800"];
+  const items = {json.dumps(prizes)};
+  const weights = {json.dumps(weights)};
+  const colors = ["#f44336", "#4caf50", "#2196f3", "#ff9800", "#9c27b0", "#ff5722", "#795548", "#607d8b"];
   const wheel = document.getElementById("wheel");
 
-  function drawWheel() {
-    for (let i = 0; i < items.length; i++) {
+  wheel.querySelectorAll(".segment").forEach(el => el.remove());
+
+  function drawWheel() {{
+    for (let i = 0; i < items.length; i++) {{
       const segment = document.createElement("div");
       segment.className = "segment";
       segment.style.background = colors[i % colors.length];
@@ -78,20 +120,21 @@ wheel_code = """
       segment.style.transform = `rotate(${angle}deg)`;
       segment.innerHTML = items[i];
       wheel.appendChild(segment);
-    }
-  }
+    }}
+  }}
 
-  function weightedChoice(items, weights) {
+  function weightedChoice(items, weights) {{
     const total = weights.reduce((a, b) => a + b, 0);
     const r = Math.random() * total;
     let sum = 0;
-    for (let i = 0; i < items.length; i++) {
+    for (let i = 0; i < items.length; i++) {{
       sum += weights[i];
       if (r < sum) return i;
-    }
-  }
+    }}
+    return 0;
+  }}
 
-  function spinWheel() {
+  function spinWheel() {{
     const selectedIndex = weightedChoice(items, weights);
     const anglePerItem = 360 / items.length;
     const baseAngle = selectedIndex * anglePerItem;
@@ -101,10 +144,10 @@ wheel_code = """
     wheel.style.transition = "transform 5s ease-out";
     wheel.style.transform = `rotate(${finalAngle}deg)`;
 
-    setTimeout(() => {
+    setTimeout(() => {{
       alert("🎯 Kết quả: " + items[selectedIndex]);
-    }, 5200);
-  }
+    }}, 5200);
+  }}
 
   document.getElementById("spin").onclick = spinWheel;
 
@@ -112,6 +155,4 @@ wheel_code = """
 </script>
 """
 
-# Nhúng HTML/JS vào Streamlit app, chiều cao đủ lớn để show wheel và button
-html(wheel_code, height=600)
-
+components.html(wheel_code, height=750)
