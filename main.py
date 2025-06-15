@@ -1,29 +1,45 @@
 import streamlit as st
+import plotly.graph_objects as go
 import random
-import time
 
-st.set_page_config(page_title="🎯 Vòng Quay May Mắn", layout="centered")
-
+st.set_page_config(page_title="🎯 Vòng quay may mắn có xác suất", layout="centered")
 st.title("🎯 VÒNG QUAY MAY MẮN")
-st.write("Nhập danh sách người chơi hoặc phần thưởng để quay ngẫu nhiên.")
+st.markdown("Nhập các phần thưởng và xác suất tương ứng để quay vòng.")
 
-# Nhập danh sách
-items = st.text_area("📝 Nhập mỗi dòng là một người/chọn:", placeholder="Phần thưởng 1\nPhần thưởng 2\nPhần thưởng 3").split('\n')
-items = [item.strip() for item in items if item.strip() != '']
+# Nhập dữ liệu
+with st.form("form_inputs"):
+    names_input = st.text_area("🎁 Danh sách phần thưởng/người chơi (mỗi dòng 1 mục):", "A\nB\nC\nD")
+    weights_input = st.text_area("📊 Tỷ lệ phần trăm tương ứng (theo dòng):", "25\n25\n25\n25")
 
-if len(items) < 2:
-    st.warning("🔔 Vui lòng nhập ít nhất 2 mục để quay.")
+    submitted = st.form_submit_button("✅ Cập nhật vòng quay")
+
+names = [n.strip() for n in names_input.split('\n') if n.strip()]
+weights = [float(w.strip()) for w in weights_input.split('\n') if w.strip()]
+
+if len(names) != len(weights):
+    st.error("❌ Số lượng mục và số lượng tỷ lệ không khớp!")
     st.stop()
 
-# Nút quay
-if st.button("🎉 QUAY NGAY"):
-    with st.spinner("🔄 Đang quay..."):
-        spin_time = 3  # Giả lập thời gian quay
-        for i in range(spin_time * 10):
-            chosen = random.choice(items)
-            st.write(f"👉 {chosen}")
-            time.sleep(0.1)
-            st.experimental_rerun()  # Tái chạy để làm hiệu ứng quay
+if sum(weights) != 100:
+    st.warning("⚠️ Tổng xác suất không bằng 100%. Sẽ tự động chuẩn hóa.")
 
-    winner = random.choice(items)
-    st.success(f"🎉 KẾT QUẢ: **{winner}** 🎊")
+# Chuẩn hóa weights về tổng 100%
+total_weight = sum(weights)
+weights = [w * 100 / total_weight for w in weights]
+
+# Vẽ vòng quay (pie chart)
+fig = go.Figure(data=[go.Pie(
+    labels=names,
+    values=weights,
+    hole=0.3,
+    textinfo='label+percent',
+    marker=dict(line=dict(color='#000000', width=1))
+)])
+fig.update_layout(showlegend=False)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# QUAY
+if st.button("🎉 QUAY NGAY"):
+    result = random.choices(names, weights=weights, k=1)[0]
+    st.success(f"🎯 KẾT QUẢ: **{result}** 🎊")
