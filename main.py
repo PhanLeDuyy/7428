@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-import plotly.graph_objects as go
 
 # Cấu hình trang
 st.set_page_config(page_title="🎯 Vòng quay may mắn có xác suất", layout="centered")
