@@ -9,13 +9,13 @@ st.markdown("""
 Nhập từng phần thưởng mỗi dòng, và tỷ lệ phần trăm tương ứng cách nhau dấu phẩy.<br>
 Ví dụ phần thưởng:<br>
 <pre>
-Thưởng A
-Thưởng B
-Thưởng C
+Thưởng Gia Linh
+Thưởng Lê Duy    
+Thưởng 16prm
 </pre>
 Tỷ lệ phần trăm:<br>
 <pre>
-50,30,20
+50,50,0
 </pre>
 Tổng tỷ lệ nên bằng 100.
 """, unsafe_allow_html=True)
