@@ -1,43 +1,111 @@
-import streamlit as st
-import random
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Vòng quay may mắn</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f3f3f3;
+    }
+    #wheel {
+      margin: 40px auto;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      border: 10px solid #333;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      transform: rotate(0deg);
+    }
+    .segment {
+      width: 50%;
+      height: 200px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-origin: 0% 0%;
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    #spin {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid red;
+      position: absolute;
+      top: -30px;
+      left: calc(50% - 20px);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 Vòng Quay May Mắn</h1>
+  <div id="wheel">
+    <div id="pointer"></div>
+  </div>
+  <button id="spin">QUAY</button>
 
-# Cấu hình trang
-st.set_page_config(page_title="🎯 Vòng quay may mắn có xác suất", layout="centered")
-st.title("🎯 VÒNG QUAY MAY MẮN")
-st.markdown("Nhập các phần thưởng và xác suất tương ứng để quay vòng.")
+  <script>
+    const items = ["A", "B", "C", "D"];
+    const weights = [50, 20, 20, 10]; // tỷ lệ phần trăm tương ứng
+    const colors = ["#f44336", "#4caf50", "#2196f3", "#ff9800"];
+    const wheel = document.getElementById("wheel");
 
-# Giao diện nhập liệu
-with st.form("form_inputs"):
-    names_input = st.text_area("🎁 Danh sách phần thưởng/người chơi (mỗi dòng 1 mục):", "A\nB\nC\nD")
-    weights_input = st.text_area("📊 Tỷ lệ phần trăm tương ứng (theo dòng):", "25\n25\n25\n25")
-    submitted = st.form_submit_button("✅ Cập nhật vòng quay")
+    function drawWheel() {
+      for (let i = 0; i < items.length; i++) {
+        const segment = document.createElement("div");
+        segment.className = "segment";
+        segment.style.background = colors[i % colors.length];
+        const angle = i * (360 / items.length);
+        segment.style.transform = `rotate(${angle}deg)`;
+        segment.innerHTML = items[i];
+        wheel.appendChild(segment);
+      }
+    }
 
-# Xử lý dữ liệu
-names = [n.strip() for n in names_input.split('\n') if n.strip()]
-weights = [float(w.strip()) for w in weights_input.split('\n') if w.strip()]
+    function weightedChoice(items, weights) {
+      const total = weights.reduce((a, b) => a + b, 0);
+      const r = Math.random() * total;
+      let sum = 0;
+      for (let i = 0; i < items.length; i++) {
+        sum += weights[i];
+        if (r < sum) return i;
+      }
+    }
 
-if len(names) != len(weights):
-    st.error("❌ Số lượng mục và số lượng tỷ lệ không khớp!")
-    st.stop()
+    function spinWheel() {
+      const selectedIndex = weightedChoice(items, weights);
+      const anglePerItem = 360 / items.length;
+      const baseAngle = selectedIndex * anglePerItem;
+      const extra = 360 * 5; // quay 5 vòng
+      const finalAngle = extra + (360 - baseAngle - anglePerItem / 2);
 
-if sum(weights) != 100:
-    st.warning("⚠️ Tổng xác suất không bằng 100%. Sẽ tự động chuẩn hóa.")
-    total_weight = sum(weights)
-    weights = [w * 100 / total_weight for w in weights]
+      wheel.style.transition = "transform 5s ease-out";
+      wheel.style.transform = `rotate(${finalAngle}deg)`;
 
-# Vẽ biểu đồ vòng quay
-fig = go.Figure(data=[go.Pie(
-    labels=names,
-    values=weights,
-    hole=0.3,
-    textinfo='label+percent',
-    marker=dict(line=dict(color='#000000', width=1))
-)])
-fig.update_layout(showlegend=False)
+      setTimeout(() => {
+        alert("🎯 Kết quả: " + items[selectedIndex]);
+      }, 5200);
+    }
 
-st.plotly_chart(fig, use_container_width=True)
+    document.getElementById("spin").onclick = spinWheel;
 
-# Nút quay
-if st.button("🎉 QUAY NGAY"):
-    result = random.choices(names, weights=weights, k=1)[0]
-    st.success(f"🎯 KẾT QUẢ: **{result}** 🎊")
+    drawWheel();
+  </script>
+</body>
+</html>
